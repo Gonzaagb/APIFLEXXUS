@@ -9,7 +9,7 @@ services:
     volumes:
       - 'nodejs_data:/app/data'
     ports:
-      - '14998:5000'
+      - '10000:5000'
     deploy:
       labels:
       - "traefik.enable=true" 

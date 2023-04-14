@@ -19,7 +19,7 @@ services:
       - "traefik.http.routers.${FQDN_NOTDOT}-https.rule=Host(`${PS_DOMAIN}`) || Host(`www.${PS_DOMAIN}`)"
       - "traefik.http.routers.${FQDN_NOTDOT}-https.entrypoints=https"
       - "traefik.http.routers.${FQDN_NOTDOT}-https.tls=true"
-      #- "traefik.http.routers.${FQDN_NOTDOT}-https.tls.certresolver=myresolver"
+      - "traefik.http.routers.${FQDN_NOTDOT}-https.tls.certresolver=myresolver"
       - "traefik.http.services.${FQDN_NOTDOT}-http.loadbalancer.server.port=5000"
       placement:
         constraints: ["${NODE}"]

@@ -1,0 +1,92 @@
+version: '3.6'
+
+services:
+  server-graphsql:
+      image: fabreguesm/ctacteapi-graphql-api
+      networks:
+        - traefik
+        - default
+      volumes:
+        - 'nodejs_datactacteapi-graphql-api:/app/data'
+      ports:
+        - '15000:4000'
+      deploy:
+        labels:
+        - "traefik.enable=true" 
+        - "traefik.http.routers.${FQDN_NOTDOT}-http.entrypoints=web" 
+        - "traefik.http.routers.${FQDN_NOTDOT}-http.rule=Host(`${PS_DOMAIN}`) || Host(`www.${PS_DOMAIN}`)" 
+        - "traefik.http.middlewares.${FQDN_NOTDOT}-http.redirectscheme.scheme=https"
+        - "traefik.http.routers.${FQDN_NOTDOT}-https.rule=Host(`${PS_DOMAIN}`) || Host(`www.${PS_DOMAIN}`)"
+        - "traefik.http.routers.${FQDN_NOTDOT}-https.entrypoints=https"
+        - "traefik.http.routers.${FQDN_NOTDOT}-https.tls=true"
+        - "traefik.http.routers.${FQDN_NOTDOT}-https.tls.certresolver=myresolver"
+        - "traefik.http.services.${FQDN_NOTDOT}-http.loadbalancer.server.port=5000"
+        placement:
+          constraints: ["${NODE}"]
+        resources:
+          limits:
+            cpus: '1.0'
+            memory: 1.0G
+  client:
+    image: fabreguesmc/flxctacte-lient:lastest
+    networks:
+      - traefik
+      - default
+    volumes:
+      - 'flxctacte-lient:/app/data'
+    ports:
+      - '12000:80'
+    deploy:
+      labels:
+      - "traefik.enable=true" 
+      - "traefik.http.routers.${FQDN_NOTDOT}-http.entrypoints=web" 
+      - "traefik.http.routers.${FQDN_NOTDOT}-http.rule=Host(`${PS_DOMAIN}`) || Host(`www.${PS_DOMAIN}`)" 
+      - "traefik.http.middlewares.${FQDN_NOTDOT}-http.redirectscheme.scheme=https"
+      - "traefik.http.routers.${FQDN_NOTDOT}-https.rule=Host(`${PS_DOMAIN}`) || Host(`www.${PS_DOMAIN}`)"
+      - "traefik.http.routers.${FQDN_NOTDOT}-https.entrypoints=https"
+      - "traefik.http.routers.${FQDN_NOTDOT}-https.tls=true"
+      - "traefik.http.routers.${FQDN_NOTDOT}-https.tls.certresolver=myresolver"
+      - "traefik.http.services.${FQDN_NOTDOT}-http.loadbalancer.server.port=5000"
+      placement:
+        constraints: ["${NODE}"]
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1.0G
+    
+    server-graphsql:
+    image: fabreguesm/ctacteapi-graphql-api
+    networks:
+      - traefik
+      - default
+    volumes:
+      - 'nodejs_datactacteapi-graphql-api:/app/data'
+    ports:
+      - '15000:4000'
+    deploy:
+      labels:
+      - "traefik.enable=true" 
+      - "traefik.http.routers.${FQDN_NOTDOT}-http.entrypoints=web" 
+      - "traefik.http.routers.${FQDN_NOTDOT}-http.rule=Host(`${PS_DOMAIN}`) || Host(`www.${PS_DOMAIN}`)" 
+      - "traefik.http.middlewares.${FQDN_NOTDOT}-http.redirectscheme.scheme=https"
+      - "traefik.http.routers.${FQDN_NOTDOT}-https.rule=Host(`${PS_DOMAIN}`) || Host(`www.${PS_DOMAIN}`)"
+      - "traefik.http.routers.${FQDN_NOTDOT}-https.entrypoints=https"
+      - "traefik.http.routers.${FQDN_NOTDOT}-https.tls=true"
+      - "traefik.http.routers.${FQDN_NOTDOT}-https.tls.certresolver=myresolver"
+      - "traefik.http.services.${FQDN_NOTDOT}-http.loadbalancer.server.port=5000"
+      placement:
+        constraints: ["${NODE}"]
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1.0G
+volumes:
+  ctacteapi-graphql-api:
+    name: "${FQDN_NOTDOT}_ctacteapi-graphql-api"
+  flxctacte-lient:
+    name: "${FQDN_NOTDOT}_nodejs-data"
+
+networks:
+  traefik:
+    external:
+      name: traefik-network

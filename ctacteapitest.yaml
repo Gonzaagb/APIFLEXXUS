@@ -7,20 +7,20 @@ services:
         - traefik
         - default
       volumes:
-        - 'nodejs_datactacteapi-graphql-api:/app/data'
-      ports:
-        - '15000:4000'
+        - 'sftp_data:/server/src/public'
+      #ports:
+      #  - '15000:4000'
       deploy:
         labels:
         - "traefik.enable=true" 
         - "traefik.http.routers.${FQDN_NOTDOT}-http.entrypoints=web" 
-        - "traefik.http.routers.${FQDN_NOTDOT}-http.rule=Host(`${PS_DOMAIN}`) || Host(`www.${PS_DOMAIN}`)" 
+        - "traefik.http.routers.${FQDN_NOTDOT}-http.rule=Host(`${PS_DOMAIN}`) || Host(`www.servercc.${PS_DOMAIN}`)" 
         - "traefik.http.middlewares.${FQDN_NOTDOT}-http.redirectscheme.scheme=https"
-        - "traefik.http.routers.${FQDN_NOTDOT}-https.rule=Host(`${PS_DOMAIN}`) || Host(`www.${PS_DOMAIN}`)"
+        - "traefik.http.routers.${FQDN_NOTDOT}-https.rule=Host(`${PS_DOMAIN}`) || Host(`www.servercc.${PS_DOMAIN}`)"
         - "traefik.http.routers.${FQDN_NOTDOT}-https.entrypoints=https"
         - "traefik.http.routers.${FQDN_NOTDOT}-https.tls=true"
         - "traefik.http.routers.${FQDN_NOTDOT}-https.tls.certresolver=myresolver"
-        - "traefik.http.services.${FQDN_NOTDOT}-http.loadbalancer.server.port=5000"
+        - "traefik.http.services.${FQDN_NOTDOT}-http.loadbalancer.server.port=4000"
         placement:
           constraints: ["${NODE}"]
         resources:
@@ -28,7 +28,7 @@ services:
             cpus: '1.0'
             memory: 1.0G
   client:
-    image: fabreguesmc/flxctacte-lient:lastest
+    image: fabreguesm/flxctacte-lient:lastest
     networks:
       - traefik
       - default
@@ -46,45 +46,40 @@ services:
       - "traefik.http.routers.${FQDN_NOTDOT}-https.entrypoints=https"
       - "traefik.http.routers.${FQDN_NOTDOT}-https.tls=true"
       - "traefik.http.routers.${FQDN_NOTDOT}-https.tls.certresolver=myresolver"
-      - "traefik.http.services.${FQDN_NOTDOT}-http.loadbalancer.server.port=5000"
+      - "traefik.http.services.${FQDN_NOTDOT}-http.loadbalancer.server.port=80" 
+    depends_on:
+      - server-graphsql 
       placement:
         constraints: ["${NODE}"]
       resources:
         limits:
           cpus: '1.0'
           memory: 1.0G
-    
-    server-graphsql:
-    image: fabreguesm/ctacteapi-graphql-api
-    networks:
-      - traefik
-      - default
-    volumes:
-      - 'nodejs_datactacteapi-graphql-api:/app/data'
-    ports:
-      - '15000:4000'
+    sftp:
+    image: 'atmoz/sftp:alpine'
     deploy:
       labels:
-      - "traefik.enable=true" 
-      - "traefik.http.routers.${FQDN_NOTDOT}-http.entrypoints=web" 
-      - "traefik.http.routers.${FQDN_NOTDOT}-http.rule=Host(`${PS_DOMAIN}`) || Host(`www.${PS_DOMAIN}`)" 
-      - "traefik.http.middlewares.${FQDN_NOTDOT}-http.redirectscheme.scheme=https"
-      - "traefik.http.routers.${FQDN_NOTDOT}-https.rule=Host(`${PS_DOMAIN}`) || Host(`www.${PS_DOMAIN}`)"
-      - "traefik.http.routers.${FQDN_NOTDOT}-https.entrypoints=https"
-      - "traefik.http.routers.${FQDN_NOTDOT}-https.tls=true"
-      - "traefik.http.routers.${FQDN_NOTDOT}-https.tls.certresolver=myresolver"
-      - "traefik.http.services.${FQDN_NOTDOT}-http.loadbalancer.server.port=5000"
+      - "traefik.enable=true"
+      - "traefik.tcp.routers.sftp.rule=HostSNI(`${PS_DOMAIN}`) && Path(`/sftp`)"
+      - "traefik.tcp.routers.sftp.service=sftp"
+      - "traefik.tcp.services.sftp.loadbalancer.server.port=22"
+#      - "traefik.tcp.services.sftp.loadbalancer.sticky=true"
+#      - "traefik.tcp.services.sftp.loadbalancer.sticky.cookie.name=sftpcookie"
+#      - "traefik.tcp.services.sftp.loadbalancer.sticky.cookie.secure=true"
       placement:
         constraints: ["${NODE}"]
       resources:
         limits:
-          cpus: '1.0'
-          memory: 1.0G
+          cpus: '0.25'
+          memory: 128M
+
+
+
 volumes:
-  ctacteapi-graphql-api:
+  sftp_data:
     name: "${FQDN_NOTDOT}_ctacteapi-graphql-api"
   flxctacte-lient:
-    name: "${FQDN_NOTDOT}_nodejs-data"
+    name: "${FQDN_NOTDOT}_client-data"
 
 networks:
   traefik:
